@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 
 import db from '../database/connection';
-import convertHourToMinutes from '../utils/convertHourToMinutes';
+import convertHoursToMinutes from '../utils/convertHourToMinutes';
 
 interface ScheduleItem {
   week_day: number;
@@ -9,39 +9,39 @@ interface ScheduleItem {
   to: string;
 }
 
-class ClassesController {
-  async index (request: Request, response: Response): Promise<Response> {
-    const filters = request.query;
+export default class ClassesController {
+  async index(req: Request, res: Response) {
+    const filters = req.query;
 
-    const subject = filters.subject as string; 
+    const subject = filters.subject as string;
     const week_day = filters.week_day as string;
     const time = filters.time as string;
 
-    if (!filters.weekday || !filters.subject || !filters.time) {
-      return response.status(400).json({
-        error: 'Missing filters to search classes',
+    if (!filters.week_day || !filters.subject || !filters.time) {
+      return res.status(400).json({
+        error: 'Missing filters to search classes'
       });
     }
 
-    const timeInMinutes = convertHourToMinutes(time as string);
+    const timeInMinutes = convertHoursToMinutes(time);
 
     const classes = await db('classes')
-      .whereExists(function () {
+      .whereExists(function() {
         this.select('class_schedule.*')
           .from('class_schedule')
           .whereRaw('`class_schedule`.`class_id` = `classes`.`id`')
           .whereRaw('`class_schedule`.`week_day` = ??', [Number(week_day)])
-          .where('`class_schedule`.`from` <= ??', timeInMinutes)
-          .where('`class_schedule`.`to` > ??', timeInMinutes)
+          .whereRaw('`class_schedule`.`from` <= ??', [timeInMinutes])
+          .whereRaw('`class_schedule`.`to` > ??', [timeInMinutes])
       })
       .where('classes.subject', '=', subject)
       .join('users', 'classes.user_id', '=', 'users.id')
       .select(['classes.*', 'users.*']);
 
-    return response.json(classes);
+    return res.json(classes);
   }
 
-  async create (request: Request, response: Response): Promise<Response> {
+  async create(req: Request, res: Response) {
     const {
       name,
       avatar,
@@ -49,54 +49,51 @@ class ClassesController {
       bio,
       subject,
       cost,
-    } = request.body;
-  
+      schedule,
+    } = req.body;
+
     const trx = await db.transaction();
-  
+
     try {
-    
-      const schedule = request.body.schedule as ScheduleItem[];
-  
       const insertedUsersIds = await trx('users').insert({
         name,
         avatar,
         whatsapp,
         bio,
       });
-  
+
       const user_id = insertedUsersIds[0];
-  
+
       const insertedClassesIds = await trx('classes').insert({
         subject,
         cost,
         user_id,
       });
-      
+
       const class_id = insertedClassesIds[0];
-  
-      const classSchedule = schedule.map(scheduleItem => {
+
+      const classSchedule = schedule.map((scheduleItem: ScheduleItem) => {
         return {
           class_id,
           week_day: scheduleItem.week_day,
-          from: convertHourToMinutes(scheduleItem.from),
-          to: convertHourToMinutes(scheduleItem.to),
+          from: convertHoursToMinutes(scheduleItem.from),
+          to: convertHoursToMinutes(scheduleItem.to),
         };
       });
-  
-  
+
       await trx('class_schedule').insert(classSchedule);
-  
+
       await trx.commit();
-  
-      return response.status(201).send();
-    } catch(err) {
+
+      return res.status(201).send();
+    } catch (err) {
+      console.log(err.message);
+
       await trx.rollback();
-  
-      return response.status(400).json({
-        error: 'Unexpected error while creating new class',
-      })
+
+      return res.status(400).json({
+        message: 'Unexpected error while createing new class'
+      });
     }
   }
 }
-
-export default ClassesController;

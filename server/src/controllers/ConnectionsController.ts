@@ -8,7 +8,7 @@ class ConnectionsController {
 
     const { total } = totalConnections[0];
 
-    return response.send();
+    return response.json({ total });
   }
 
   async create (request: Request, response: Response): Promise<Response> {

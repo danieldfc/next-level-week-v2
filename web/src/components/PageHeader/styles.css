@@ -1,16 +1,16 @@
 .page-header {
   display: flex;
-  flex-direction: color;
-  background: var(--color-primary);
+  flex-direction: column;
+  background: var(--color-primary)
 }
 
 .page-header .top-bar-container {
   width: 90%;
   margin: 0 auto;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  color: var(--colo-text-in-primary);
+  justify-content: space-between;
+  color: var(--color-text-in-primary);
   padding: 1.6rem 0;
 }
 
@@ -40,10 +40,17 @@
   color: var(--color-title-in-primary);
 }
 
+.page-header .header-content p {
+  max-width: 30rem;
+  font-size: 1.6rem;
+  line-height: 2.6rem;
+  color: var(--color-text-in-primary);
+  margin-top: 2.4rem;
+}
 
 @media (min-width: 700px) {
   .page-header {
-    height: 340px; 
+    height: 340px;
   }
 
   .page-header .top-bar-container {
@@ -55,7 +62,6 @@
     max-width: 740px;
     margin: 0 auto;
     padding-bottom: 48px;
-
     display: flex;
     flex-direction: column;
     justify-content: center;

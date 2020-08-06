@@ -11,7 +11,7 @@ export async function up(knex: Knex) {
     table.integer('class_id')
       .notNullable()
       .references('id')
-      .inTable('class')
+      .inTable('classes')
       .onUpdate('CASCADE')
       .onDelete('CASCADE');
   });
