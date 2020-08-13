@@ -12,7 +12,7 @@ class ConnectionsController {
   }
 
   async create (request: Request, response: Response): Promise<Response> {
-    const { user_id } = request.body;
+    const user_id = Number(request.user.id);
 
     await db('connections').insert({
       user_id,
